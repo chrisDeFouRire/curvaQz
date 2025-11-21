@@ -1,0 +1,24 @@
+# Node / tooling
+node_modules
+npm-debug.log*
+pnpm-debug.log*
+package-lock.json
+.env
+.env.*
+.npmrc
+
+# Build outputs
+dist
+build
+*.log
+
+# Cloudflare / Wrangler
+.wrangler
+.dev.vars
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea
+.vscode

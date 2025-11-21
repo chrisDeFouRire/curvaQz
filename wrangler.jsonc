@@ -1,0 +1,12 @@
+{
+  "name": "curvaqz",
+  "main": "src/index.tsx",
+  "compatibility_date": "2024-11-21",
+  "tsconfig": "tsconfig.json",
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/*.css"]
+    }
+  ]
+}
