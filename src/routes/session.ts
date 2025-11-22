@@ -2,6 +2,7 @@ import type { Context, Handler } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { SignJWT } from "jose";
 import { createSession, getSession, touchSession } from "../lib/db";
+import type { SessionRow } from "../lib/db";
 import type { WorkerEnv } from "../types/worker";
 
 const SESSION_COOKIE = "cq_session";
@@ -11,6 +12,11 @@ const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 60; // 1 hour
 const DEFAULT_ISSUER = "curvaqz";
 
 type SessionContext = Context<{ Bindings: WorkerEnv }>;
+type SessionIssue = {
+  session: SessionRow;
+  token: string;
+  expiresAt: number;
+};
 
 function base64UrlEncodeBytes(bytes: Uint8Array): string {
   let binary = "";
@@ -84,15 +90,37 @@ async function issueToken(
   return { token, exp };
 }
 
-export const handleSessionBootstrap: Handler<{ Bindings: WorkerEnv }> = async (c) => {
+type EnsureSessionOptions = {
+  createIfMissing: boolean;
+  replaceRevoked: boolean;
+};
+
+export async function ensureSession(
+  c: SessionContext,
+  options: EnsureSessionOptions
+): Promise<{ type: "ok"; value: SessionIssue } | { type: "error"; response: Response }> {
   const existingSessionId = readSessionId(c);
   const env = c.env;
 
   let session = existingSessionId ? await getSession(env.DB, existingSessionId) : null;
-  let sessionId = existingSessionId;
 
-  if (!session || session.revoked) {
-    sessionId = generateSessionId();
+  if (session && session.revoked) {
+    if (!options.replaceRevoked) {
+      return { type: "error", response: c.json({ error: "Invalid session" }, 401) };
+    }
+    session = null;
+  }
+
+  if (!session) {
+    if (!options.createIfMissing && existingSessionId) {
+      return { type: "error", response: c.json({ error: "Invalid session" }, 401) };
+    }
+
+    if (!options.createIfMissing) {
+      return { type: "error", response: c.json({ error: "Missing session" }, 400) };
+    }
+
+    const sessionId = generateSessionId();
     session = await createSession(env.DB, sessionId);
   } else {
     await touchSession(env.DB, session.id);
@@ -102,57 +130,47 @@ export const handleSessionBootstrap: Handler<{ Bindings: WorkerEnv }> = async (c
   try {
     issued = await issueToken(env, session.id, session.user_id);
   } catch (error) {
-    return c.json(
-      { error: "Failed to issue token", detail: error instanceof Error ? error.message : String(error) },
-      500
-    );
+    return {
+      type: "error",
+      response: c.json(
+        { error: "Failed to issue token", detail: error instanceof Error ? error.message : String(error) },
+        500
+      )
+    };
   }
 
   applyAuthCookies(c, session.id, issued.token);
 
-  return c.json(
-    {
-      sessionId: session.id,
-      userId: session.user_id,
+  return {
+    type: "ok",
+    value: {
+      session,
       token: issued.token,
       expiresAt: issued.exp * 1000
     }
-  );
+  };
+}
+
+export const handleSessionBootstrap: Handler<{ Bindings: WorkerEnv }> = async (c) => {
+  const result = await ensureSession(c, { createIfMissing: true, replaceRevoked: true });
+  if (result.type === "error") return result.response;
+
+  return c.json({
+    sessionId: result.value.session.id,
+    userId: result.value.session.user_id,
+    token: result.value.token,
+    expiresAt: result.value.expiresAt
+  });
 };
 
 export const handleSessionRefresh: Handler<{ Bindings: WorkerEnv }> = async (c) => {
-  const sessionId = readSessionId(c);
-  const env = c.env;
+  const result = await ensureSession(c, { createIfMissing: false, replaceRevoked: false });
+  if (result.type === "error") return result.response;
 
-  if (!sessionId) {
-    return c.json({ error: "Missing session" }, 400);
-  }
-
-  const session = await getSession(env.DB, sessionId);
-  if (!session || session.revoked) {
-    return c.json({ error: "Invalid session" }, 401);
-  }
-
-  await touchSession(env.DB, session.id);
-
-  let issued;
-  try {
-    issued = await issueToken(env, session.id, session.user_id);
-  } catch (error) {
-    return c.json(
-      { error: "Failed to issue token", detail: error instanceof Error ? error.message : String(error) },
-      500
-    );
-  }
-
-  applyAuthCookies(c, session.id, issued.token);
-
-  return c.json(
-    {
-      sessionId: session.id,
-      userId: session.user_id,
-      token: issued.token,
-      expiresAt: issued.exp * 1000
-    }
-  );
+  return c.json({
+    sessionId: result.value.session.id,
+    userId: result.value.session.user_id,
+    token: result.value.token,
+    expiresAt: result.value.expiresAt
+  });
 };

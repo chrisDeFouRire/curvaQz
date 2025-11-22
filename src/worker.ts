@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { handleSessionBootstrap, handleSessionRefresh } from "./routes/session";
+import { handleGenerateQuiz } from "./routes/quiz";
 import type { WorkerEnv } from "./types/worker";
 
 const api = new Hono<{ Bindings: WorkerEnv }>();
@@ -15,6 +16,7 @@ api.get("/health", (c) =>
 
 api.post("/session/bootstrap", handleSessionBootstrap);
 api.post("/session/refresh", handleSessionRefresh);
+api.post("/quiz/generate", handleGenerateQuiz);
 
 const app = new Hono<{ Bindings: WorkerEnv }>();
 
