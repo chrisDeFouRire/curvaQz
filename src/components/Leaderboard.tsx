@@ -108,7 +108,9 @@ export default function Leaderboard({ quizId, score, totalQuestions }: Leaderboa
   }, []);
 
   const loadTop = useCallback(async () => {
-    const response = await fetch(`/api/leaderboard/${quizId}/top`);
+    const response = await fetch(`/api/leaderboard/${quizId}/top`, {
+      credentials: 'same-origin'
+    });
     if (!response.ok) {
       throw new Error(`Top leaderboard failed (${response.status})`);
     }
@@ -118,7 +120,9 @@ export default function Leaderboard({ quizId, score, totalQuestions }: Leaderboa
   }, [quizId]);
 
   const loadMe = useCallback(async () => {
-    const response = await fetch(`/api/leaderboard/${quizId}/me`);
+    const response = await fetch(`/api/leaderboard/${quizId}/me`, {
+      credentials: 'same-origin'
+    });
     if (!response.ok) {
       throw new Error(response.status === 404 ? "Leaderboard entry missing" : `Leaderboard load failed (${response.status})`);
     }
@@ -142,6 +146,7 @@ export default function Leaderboard({ quizId, score, totalQuestions }: Leaderboa
         headers: {
           "Content-Type": "application/json"
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           score,
           totalQuestions,

@@ -61,3 +61,4 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 - Never commit secrets; load API keys and Cloudflare bindings via env vars and config files ignored by git.
 - Validate inputs on any public endpoints, avoid logging PII, and rotate keys when rotating services.
+- **Client-side fetch requests must include `credentials: 'same-origin'`** to send HTTP-only session cookies for authentication (added to fix session persistence issues).

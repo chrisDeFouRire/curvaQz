@@ -23,7 +23,9 @@ export default function Landing() {
 
   useEffect(() => {
     const start = performance.now();
-    fetch("/api/health")
+    fetch("/api/health", {
+      credentials: 'same-origin'
+    })
       .then(async (res) => {
         if (!res.ok) throw new Error("Health check failed");
         await res.json();

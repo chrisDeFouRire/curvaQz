@@ -18,6 +18,7 @@ export function useQuiz() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'same-origin'
       });
 
       if (!response.ok) {
