@@ -84,9 +84,6 @@ export const handleSubmitScore: Handler<{ Bindings: WorkerEnv }> = async (c) => 
       totalQuestions
     });
   } catch (error) {
-    if (error instanceof DuplicateLeaderboardEntryError) {
-      return c.json({ error: "Score already recorded", code: "duplicate" }, 409);
-    }
     console.error("leaderboard.submit.failed", { quizId, message: error instanceof Error ? error.message : String(error) });
     return c.json({ error: "Failed to record score" }, 500);
   }

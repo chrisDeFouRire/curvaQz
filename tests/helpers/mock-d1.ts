@@ -53,27 +53,67 @@ class MockStatement {
       return null;
     }
 
+    if (this.query.startsWith("SELECT id, score, total_questions, created_at FROM quiz_leaderboard_entries")) {
+      const [quizId, playerKey] = this.bindings as [string, string];
+      const existing = this.db.leaderboardEntries.find(
+        (entry) => entry.quiz_id === quizId && entry.player_key === playerKey
+      );
+      return existing ? { id: 1, score: existing.score, total_questions: existing.total_questions, created_at: existing.created_at } : null;
+    }
+
+    if (this.query.startsWith("SELECT quiz_id, player_key, session_id, user_id, nickname, score, total_questions, created_at")) {
+      const [quizId, playerKey] = this.bindings as [string, string];
+      return this.db.leaderboardEntries.find(
+        (entry) => entry.quiz_id === quizId && entry.player_key === playerKey
+      ) ?? null;
+    }
+
+    if (this.query.includes("UPDATE quiz_leaderboard_entries") && this.query.includes("SET nickname")) {
+      const [nickname, createdAt, quizId, playerKey] = this.bindings as [string, string, string, string];
+      const existingIndex = this.db.leaderboardEntries.findIndex(
+        (entry) => entry.quiz_id === quizId && entry.player_key === playerKey
+      );
+      if (existingIndex >= 0) {
+        this.db.leaderboardEntries[existingIndex].nickname = nickname;
+        this.db.leaderboardEntries[existingIndex].created_at = createdAt;
+      }
+      return null;
+    }
+
     if (this.query.startsWith("INSERT INTO quiz_leaderboard_entries")) {
       const [quizId, playerKey, sessionId, userId, nickname, score, totalQuestions, createdAt] = this
         .bindings as [string, string, string, string | null, string, number, number, string];
 
-      const existing = this.db.leaderboardEntries.find(
+      // Check if entry already exists (this should be handled by the application logic now)
+      const existingIndex = this.db.leaderboardEntries.findIndex(
         (entry) => entry.quiz_id === quizId && entry.player_key === playerKey
       );
-      if (existing) {
-        throw new Error("UNIQUE constraint failed: idx_quiz_leaderboard_unique_player");
-      }
 
-      this.db.leaderboardEntries.push({
-        quiz_id: quizId,
-        player_key: playerKey,
-        session_id: sessionId,
-        user_id: userId ?? null,
-        nickname,
-        score,
-        total_questions: totalQuestions,
-        created_at: createdAt
-      });
+      if (existingIndex >= 0) {
+        // Update existing entry
+        this.db.leaderboardEntries[existingIndex] = {
+          quiz_id: quizId,
+          player_key: playerKey,
+          session_id: sessionId,
+          user_id: userId ?? null,
+          nickname,
+          score,
+          total_questions: totalQuestions,
+          created_at: createdAt
+        };
+      } else {
+        // Insert new entry
+        this.db.leaderboardEntries.push({
+          quiz_id: quizId,
+          player_key: playerKey,
+          session_id: sessionId,
+          user_id: userId ?? null,
+          nickname,
+          score,
+          total_questions: totalQuestions,
+          created_at: createdAt
+        });
+      }
       return null;
     }
 

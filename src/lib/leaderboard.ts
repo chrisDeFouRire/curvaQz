@@ -109,7 +109,28 @@ export async function addLeaderboardEntry(
   const createdAt = nowIso();
   const playerKey = buildPlayerKey(entry.sessionId, entry.userId);
 
-  try {
+  // Check if entry already exists
+  const existingEntry = await db
+    .prepare(
+      `SELECT id, score, total_questions, created_at FROM quiz_leaderboard_entries
+       WHERE quiz_id = ? AND player_key = ?
+       LIMIT 1`
+    )
+    .bind(entry.quizId, playerKey)
+    .first<{ id: number; score: number; total_questions: number; created_at: string }>();
+
+  if (existingEntry) {
+    // Update only the nickname for existing entries
+    await db
+      .prepare(
+        `UPDATE quiz_leaderboard_entries
+         SET nickname = ?, created_at = ?
+         WHERE quiz_id = ? AND player_key = ?`
+      )
+      .bind(entry.nickname, createdAt, entry.quizId, playerKey)
+      .run();
+  } else {
+    // Insert new entry
     await db
       .prepare(
         `INSERT INTO quiz_leaderboard_entries
@@ -127,24 +148,24 @@ export async function addLeaderboardEntry(
         createdAt
       )
       .run();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("UNIQUE") || message.includes("idx_quiz_leaderboard_unique_player")) {
-      throw new DuplicateLeaderboardEntryError();
-    }
-    throw error;
   }
 
-  return {
-    quiz_id: entry.quizId,
-    player_key: playerKey,
-    session_id: entry.sessionId,
-    user_id: entry.userId ?? null,
-    nickname: entry.nickname,
-    score: entry.score,
-    total_questions: entry.totalQuestions,
-    created_at: createdAt
-  };
+  // Fetch the entry (either newly inserted or updated)
+  const result = await db
+    .prepare(
+      `SELECT quiz_id, player_key, session_id, user_id, nickname, score, total_questions, created_at
+       FROM quiz_leaderboard_entries
+       WHERE quiz_id = ? AND player_key = ?
+       LIMIT 1`
+    )
+    .bind(entry.quizId, playerKey)
+    .first<LeaderboardEntryRow>();
+
+  if (!result) {
+    throw new Error("Failed to retrieve leaderboard entry after insert/update");
+  }
+
+  return result;
 }
 
 export async function getTotalPlayers(db: D1Database, quizId: string): Promise<number> {

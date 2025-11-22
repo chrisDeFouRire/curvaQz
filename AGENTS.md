@@ -57,6 +57,12 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - Request review for changes touching gameplay logic, data sources, or security-sensitive configuration.
 - When modifying `wrangler.jsonc`, run `npx wrangler types` to refresh `worker-configuration.d.ts` so bindings stay in sync.
 
+## Deployment Guidelines
+
+- **AI assistants must NOT run `wrangler deploy` commands** - deployment is handled through Git CI/CD pipelines
+- Test locally with `wrangler dev` and run unit tests with `npm test` before committing
+- Ensure all changes are committed and pushed to trigger automated deployment
+
 ## Security & Configuration
 
 - Never commit secrets; load API keys and Cloudflare bindings via env vars and config files ignored by git.

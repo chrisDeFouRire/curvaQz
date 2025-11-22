@@ -67,15 +67,22 @@ describe("leaderboard library", () => {
       totalQuestions: 5
     });
 
+    // Test that updating nickname works (same player, different nickname)
     await expect(
       addLeaderboardEntry(db as unknown as D1Database, {
         quizId: "quiz-1",
         sessionId: "sA",
-        nickname: "Alice",
-        score: 3,
+        nickname: "AliceUpdated",
+        score: 4, // Same score to verify it doesn't change
         totalQuestions: 5
       })
-    ).rejects.toBeInstanceOf(DuplicateLeaderboardEntryError);
+    ).resolves.toMatchObject({
+      quiz_id: "quiz-1",
+      player_key: playerA,
+      nickname: "AliceUpdated",
+      score: 4,
+      total_questions: 5
+    });
 
     const top = await getTopEntries(db as unknown as D1Database, "quiz-1", 10);
     expect(top.totalPlayers).toBe(3);
@@ -194,19 +201,20 @@ describe("leaderboard routes", () => {
     );
     expect(first.status).toBe(200);
 
-    const duplicate = await app.fetch(
+    // Test updating nickname for existing entry (should succeed)
+    const update = await app.fetch(
       new Request(`https://example.com/api/leaderboard/${quizBody.quizId}/score`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           cookie: cookieHeader
         },
-        body: JSON.stringify({ score: 4, totalQuestions: 5, nickname: "Player1" })
+        body: JSON.stringify({ score: 4, totalQuestions: 5, nickname: "UpdatedPlayer" })
       }),
       env
     );
-    expect(duplicate.status).toBe(409);
-    const duplicateBody = await duplicate.json() as { error?: string };
-    expect(duplicateBody.error).toBe("Score already recorded");
+    expect(update.status).toBe(200);
+    const updateBody = await update.json() as { entry?: { nickname: string } };
+    expect(updateBody.entry?.nickname).toBe("UpdatedPlayer");
   });
 });
