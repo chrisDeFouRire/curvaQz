@@ -10,6 +10,7 @@
     "dev": "astro build && wrangler dev --port 4321",
     "ui": "astro dev",
     "build": "astro build",
+    "lint": "eslint \"src/**/*.{ts,tsx,astro}\" --max-warnings=0",
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check"
@@ -28,8 +29,15 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
+    "astro-eslint-parser": "^1.0.3",
+    "eslint": "^8.57.1",
+    "eslint-plugin-astro": "^1.2.4",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-react": "^7.37.3",
     "wrangler": "^4.50.0"
   }
 }
