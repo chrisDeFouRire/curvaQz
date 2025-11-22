@@ -1,0 +1,47 @@
+[
+	{
+		"question": "Quel a été le score final du dernier match France vs Azerbaïdjan ?",
+		"correct_answer": "3-1 en faveur de la France",
+		"incorrect_answers": [
+			"2-2",
+			"1-0 pour l'Azerbaïdjan",
+			"4-3 en faveur de la France"
+		]
+	},
+	{
+		"question": "Quel joueur a marqué son premier but avec l'équipe de France lors de ce match ?",
+		"correct_answer": "Maghnes Akliouche",
+		"incorrect_answers": [
+			"Kylian Mbappé",
+			"Antoine Griezmann",
+			"Olivier Giroud"
+		]
+	},
+	{
+		"question": "Combien de joueurs nouveaux ont débuté pour la France lors de ce match ?",
+		"correct_answer": "Onze nouveaux titulaires",
+		"incorrect_answers": [
+			"Cinq nouveaux titulaires",
+			"Aucun nouveau titulaire",
+			"Quinze nouveaux titulaires"
+		]
+	},
+	{
+		"question": "Quel a été un fait marquant concernant le gardien Lucas Chevalier ?",
+		"correct_answer": "Il a encaissé un but rapidement après sa première sélection",
+		"incorrect_answers": [
+			"Il a arrêté un penalty décisif",
+			"Il a joué une mi-temps sans encaisser de but",
+			"Il a marqué un but depuis sa cage"
+		]
+	},
+	{
+		"question": "Quelle particularité concernant les buts de la France en première mi-temps ?",
+		"correct_answer": "Deux buts ont été refusés après arbitrage vidéo",
+		"incorrect_answers": [
+			"Ils ont marqué un triplé à la 10ème minute",
+			"Aucun but n'a été refusé",
+			"Les buts ont tous été marqués sur penalty"
+		]
+	}
+]
