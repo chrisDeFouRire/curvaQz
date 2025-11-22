@@ -1,0 +1,51 @@
+---
+import "../styles/globals.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = title ?? "CurvaQz | Football quiz from the edge";
+const desc =
+  description ??
+  "CurvaQz runs a fast football quiz straight from a Cloudflare Worker powered by Astro, React, and Tailwind CSS.";
+---
+
+<!doctype html>
+<html lang="en" class="bg-slate-950">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="min-h-screen text-slate-100 antialiased">
+    <header class="sticky top-0 z-20 border-b border-slate-800/70 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
+        <a href="/" class="text-lg font-semibold tracking-tight text-emerald-300">
+          CurvaQz
+          <span class="ml-2 rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs text-emerald-200 ring-1 ring-emerald-500/30">
+            Astro + React
+          </span>
+        </a>
+        <nav class="flex items-center gap-4 text-sm text-slate-300">
+          <span class="rounded-full bg-slate-900/70 px-3 py-1 ring-1 ring-slate-700">Worker</span>
+          <span class="rounded-full bg-slate-900/70 px-3 py-1 ring-1 ring-slate-700">Tailwind</span>
+          <span class="rounded-full bg-slate-900/70 px-3 py-1 ring-1 ring-slate-700">Astro static</span>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="border-t border-slate-800/80 bg-slate-950/80">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-6 text-sm text-slate-400">
+        <p>Edge-rendered by Cloudflare · Styled with Tailwind 4 · Built with Astro</p>
+        <p class="text-slate-500">/api/health responds from the worker</p>
+      </div>
+    </footer>
+  </body>
+</html>
