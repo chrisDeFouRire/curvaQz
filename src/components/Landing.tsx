@@ -48,9 +48,8 @@ export default function Landing() {
               A football quiz, rendered by Astro and shipped from the worker edge.
             </h1>
             <p className="max-w-2xl text-lg text-slate-300">
-              The UI is built with Astro + Tailwind, React islands for interactivity, and the Cloudflare
-              Worker keeps the API and static assets together. Swap in the quiz screens without changing
-              the hosting pattern.
+              Test your football knowledge with fresh questions served instantly from the edge. The UI is built with Astro + Tailwind, React islands for interactivity, and the Cloudflare
+              Worker keeps the API and static assets together.
             </p>
             <div className="flex flex-wrap gap-3 text-sm text-slate-200">
               <span className="rounded-full bg-slate-900/80 px-3 py-1 ring-1 ring-slate-700">
@@ -65,17 +64,18 @@ export default function Landing() {
             </div>
             <div className="flex flex-wrap gap-4">
               <a
+                href="/play"
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-3 text-slate-950 font-semibold shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40"
+              >
+                Start Quiz
+                <span aria-hidden>⚽</span>
+              </a>
+              <a
                 href="#stack"
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40"
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-900/80 px-4 py-2 text-slate-50 ring-1 ring-slate-700 transition hover:-translate-y-0.5 hover:ring-emerald-400"
               >
                 Explore the stack
                 <span aria-hidden>→</span>
-              </a>
-              <a
-                href="/api/health"
-                className="inline-flex items-center gap-2 rounded-lg bg-slate-900/80 px-4 py-2 text-slate-50 ring-1 ring-slate-700 transition hover:-translate-y-0.5 hover:ring-emerald-400"
-              >
-                Call /api/health
               </a>
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function Landing() {
               Quiz ready
             </div>
             <p className="mt-3 text-sm text-slate-300">
-              Plug the quiz React screens into this Astro page, or add API routes to <code className="font-mono">src/worker.ts</code>.
+              The quiz is now live! Click "Start Quiz" above to play. Questions are generated on-demand with session management.
               The worker, UI, and Tailwind styling stay in sync without extra hosting layers.
             </p>
           </div>
