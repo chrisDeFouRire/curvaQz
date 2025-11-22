@@ -47,7 +47,7 @@ export function useQuiz() {
       } else {
         setQuizState("completed");
       }
-    }, 1500); // Show answer feedback for 1.5 seconds
+    }, 1500); // Show answer feedback for 1 second
   }, [quizData, currentQuestionIndex]);
 
   const resetQuiz = useCallback(() => {

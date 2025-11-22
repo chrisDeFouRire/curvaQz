@@ -62,6 +62,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - **AI assistants must NOT run `wrangler deploy` commands** - deployment is handled through Git CI/CD pipelines
 - Test locally with `wrangler dev` and run unit tests with `npm test` before committing
 - Ensure all changes are committed and pushed to trigger automated deployment
+- **AI assistants must NOT leave development servers running in background** - use `is_background: false` and stop servers immediately after testing
 
 ## Security & Configuration
 

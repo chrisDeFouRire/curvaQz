@@ -152,7 +152,7 @@ export default function Landing() {
               Quiz ready
             </div>
             <p className="mt-3 text-sm text-slate-300">
-              The quiz is now live! Click "Start Quiz" above to play. Questions are generated on-demand with session management.
+              The quiz is now live! Click &quot;Start Quiz&quot; above to play. Questions are generated on-demand with session management.
               The worker, UI, and Tailwind styling stay in sync without extra hosting layers.
             </p>
           </div>

@@ -4,7 +4,6 @@ import type { WorkerEnv } from "../types/worker";
 import {
   addLeaderboardEntry,
   buildPlayerKey,
-  DuplicateLeaderboardEntryError,
   getBottomEntries,
   getEntriesAroundPlayer,
   getPlayerRank,

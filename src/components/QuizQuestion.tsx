@@ -17,40 +17,32 @@ export default function QuizQuestion({
   isAnswered = false
 }: QuizQuestionProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   // Reset state when question changes
   useEffect(() => {
     setSelectedOptionId(null);
-    setHasSubmitted(false);
   }, [question.id]);
 
   const handleOptionClick = (optionId: string) => {
-    if (hasSubmitted || isAnswered) return;
+    if (selectedOptionId || isAnswered) return;
 
-    setSelectedOptionId(optionId);
-  };
-
-  const handleSubmit = () => {
-    if (!selectedOptionId || hasSubmitted) return;
-
-    const selectedOption = question.options.find(opt => opt.id === selectedOptionId);
+    const selectedOption = question.options.find(opt => opt.id === optionId);
     if (!selectedOption) return;
 
     const answer: QuizAnswer = {
       questionId: question.id,
-      optionId: selectedOptionId,
+      optionId: optionId,
       isCorrect: selectedOption.isCorrect
     };
 
-    setHasSubmitted(true);
+    setSelectedOptionId(optionId);
     onAnswer(answer);
   };
 
   const getOptionClassName = (optionId: string) => {
     const baseClasses = "w-full p-4 text-left rounded-lg border transition-all duration-200";
 
-    if (!hasSubmitted && !isAnswered) {
+    if (!selectedOptionId && !isAnswered) {
       return `${baseClasses} border-slate-700 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-600 cursor-pointer`;
     }
 
@@ -65,7 +57,7 @@ export default function QuizQuestion({
       }
     }
 
-    if (option?.isCorrect && (hasSubmitted || isAnswered)) {
+    if (option?.isCorrect && (selectedOptionId || isAnswered)) {
       return `${baseClasses} border-emerald-500 bg-emerald-500/10 text-emerald-200`;
     }
 
@@ -89,11 +81,11 @@ export default function QuizQuestion({
             key={option.id}
             onClick={() => handleOptionClick(option.id)}
             className={getOptionClassName(option.id)}
-            disabled={hasSubmitted || isAnswered}
+            disabled={selectedOptionId !== null || isAnswered}
           >
             <div className="flex items-center justify-between">
               <span>{option.text}</span>
-              {(hasSubmitted || isAnswered) && (
+              {(selectedOptionId || isAnswered) && (
                 <span className="ml-2">
                   {option.isCorrect ? (
                     <span className="text-emerald-400">✓</span>
@@ -107,18 +99,7 @@ export default function QuizQuestion({
         ))}
       </div>
 
-      {!hasSubmitted && !isAnswered && selectedOptionId && (
-        <div className="flex justify-center">
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-3 bg-emerald-500 text-slate-950 font-semibold rounded-lg shadow-lg shadow-emerald-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-200"
-          >
-            Submit Answer
-          </button>
-        </div>
-      )}
-
-      {(hasSubmitted || isAnswered) && (
+      {selectedOptionId && (
         <div className="text-center">
           <div className="text-sm text-slate-400">
             {question.options.find(opt => opt.id === selectedOptionId)?.isCorrect
