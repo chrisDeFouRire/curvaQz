@@ -3,6 +3,7 @@ import { getQuizByLatestFixture, type QzApiConfig } from "../lib/qz-api";
 import type { WorkerEnv } from "../types/worker";
 import { ensureSession } from "./session";
 import mockQuiz from "../../mockup/quizz.json";
+import { recordQuiz } from "../lib/leaderboard";
 
 type QuizMode = "mock" | "live";
 
@@ -124,7 +125,13 @@ function normalizeQuestion(question: RawQuestion): NormalizedQuestion | null {
   };
 }
 
-function normalizeQuiz(quiz: RawQuiz, targetLength: number, sessionId: string, source: QuizMode): NormalizedQuiz {
+function normalizeQuiz(
+  quiz: RawQuiz,
+  targetLength: number,
+  sessionId: string,
+  source: QuizMode,
+  quizId: string
+): NormalizedQuiz {
   const normalizedQuestions = quiz.questions
     .map((question) => normalizeQuestion(question))
     .filter((value): value is NormalizedQuestion => Boolean(value));
@@ -137,7 +144,7 @@ function normalizeQuiz(quiz: RawQuiz, targetLength: number, sessionId: string, s
   const metadata = quiz.metadata && Object.keys(quiz.metadata).length > 0 ? quiz.metadata : undefined;
 
   return {
-    quizId: crypto.randomUUID(),
+    quizId,
     sessionId,
     source,
     metadata,
@@ -193,8 +200,19 @@ export const handleGenerateQuiz: Handler<{ Bindings: WorkerEnv }> = async (c) =>
   const mode = resolveQuizMode(c.env);
 
   try {
+    const quizId = crypto.randomUUID();
     const rawQuiz = mode === "mock" ? loadMockQuiz(targetLength) : await loadLiveQuiz(c.env, targetLength);
-    const normalized = normalizeQuiz(rawQuiz, targetLength, sessionResult.value.session.id, mode);
+    const normalized = normalizeQuiz(rawQuiz, targetLength, sessionResult.value.session.id, mode, quizId);
+
+    await recordQuiz(c.env.DB, {
+      id: quizId,
+      sessionId: sessionResult.value.session.id,
+      userId: sessionResult.value.session.user_id,
+      source: mode,
+      questionCount: normalized.questions.length,
+      metadata: normalized.metadata ?? null
+    });
+
     return c.json(normalized);
   } catch (error) {
     console.error("quiz.generate.failed", {

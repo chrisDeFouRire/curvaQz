@@ -1,4 +1,5 @@
 import type { QuizResults as QuizResultsType } from "../types/quiz";
+import Leaderboard from "./Leaderboard";
 
 type QuizResultsProps = {
   results: QuizResultsType;
@@ -41,6 +42,12 @@ export default function QuizResults({ results, onPlayAgain }: QuizResultsProps) 
           </div>
         </div>
       </div>
+
+      <Leaderboard
+        quizId={quizData.quizId}
+        score={score}
+        totalQuestions={totalQuestions}
+      />
 
       <div className="glass rounded-2xl p-6 space-y-4">
         <h3 className="text-lg font-semibold text-slate-100">Question Breakdown</h3>
