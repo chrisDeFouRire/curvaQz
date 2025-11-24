@@ -24,12 +24,13 @@
     "astro": "^5.15.3",
     "autoprefixer": "^10.4.21",
     "hono": "^4.10.6",
+    "jose": "^5.9.6",
     "postcss": "^8.5.6",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.17",
-    "typescript": "^5.9.3",
-    "jose": "^5.9.6"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.6",

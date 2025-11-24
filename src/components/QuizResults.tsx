@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 import type { QuizResults as QuizResultsType } from "../types/quiz";
 import Leaderboard from "./Leaderboard";
 
@@ -13,6 +14,7 @@ export default function QuizResults({ results, onPlayAgain }: QuizResultsProps) 
   const [shareUrl, setShareUrl] = useState("");
   const [shareStatus, setShareStatus] = useState<"idle" | "sharing" | "shared" | "copied" | "error">("idle");
   const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const getPerformanceMessage = () => {
     if (percentage >= 90) return { message: "Outstanding! 🏆", color: "text-emerald-400" };
@@ -35,6 +37,15 @@ export default function QuizResults({ results, onPlayAgain }: QuizResultsProps) 
     setShareUrl(fullUrl);
     window.history.replaceState({}, "", url);
   }, [quizData.quizId]);
+
+  const getQrBlob = useCallback(async () => {
+    const canvas = qrCanvasRef.current;
+    if (!canvas) return null;
+
+    return await new Promise<Blob | null>(resolve => {
+      canvas.toBlob(blob => resolve(blob), "image/png");
+    });
+  }, []);
 
   const copyLink = useCallback(async () => {
     if (!shareUrl) {
@@ -95,6 +106,76 @@ export default function QuizResults({ results, onPlayAgain }: QuizResultsProps) 
     }
   }, [copyLink, shareText, shareUrl]);
 
+  const downloadQrCode = useCallback(async () => {
+    if (!shareUrl) {
+      setShareStatus("error");
+      setShareMessage("Share link not ready yet.");
+      return;
+    }
+
+    const blob = await getQrBlob();
+    if (!blob) {
+      setShareStatus("error");
+      setShareMessage("QR code not ready yet.");
+      return;
+    }
+
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `curvaqz-quiz-${quizData.quizId}.png`;
+    link.click();
+    URL.revokeObjectURL(downloadUrl);
+
+    setShareStatus("shared");
+    setShareMessage("QR code saved—share it anywhere.");
+  }, [getQrBlob, quizData.quizId, shareUrl]);
+
+  const shareQrCode = useCallback(async () => {
+    if (!shareUrl) {
+      setShareStatus("error");
+      setShareMessage("Share link not ready yet.");
+      return;
+    }
+
+    if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+      setShareStatus("error");
+      setShareMessage("QR sharing isn't available on this device. Try saving the image instead.");
+      return;
+    }
+
+    const blob = await getQrBlob();
+    if (!blob) {
+      setShareStatus("error");
+      setShareMessage("Couldn't generate the QR code for sharing.");
+      return;
+    }
+
+    const qrFile = new File([blob], `curvaqz-quiz-${quizData.quizId}.png`, { type: "image/png" });
+    const shareData: ShareData = {
+      files: [qrFile],
+      title: "CurvaQz — Football Quiz",
+      text: shareText,
+      url: shareUrl
+    };
+
+    if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
+      setShareStatus("error");
+      setShareMessage("Sharing files isn't supported here. Try saving the QR instead.");
+      return;
+    }
+
+    try {
+      await navigator.share(shareData);
+      setShareStatus("shared");
+      setShareMessage("QR code shared—challenge accepted!");
+    } catch (error) {
+      console.error("share.qr.failed", { error });
+      setShareStatus("error");
+      setShareMessage("Couldn't share the QR. Try saving it instead.");
+    }
+  }, [getQrBlob, quizData.quizId, shareText, shareUrl]);
+
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
@@ -125,7 +206,7 @@ export default function QuizResults({ results, onPlayAgain }: QuizResultsProps) 
         totalQuestions={totalQuestions}
       />
 
-      <div className="glass rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 space-y-3">
+      <div className="glass rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="text-xs uppercase tracking-[0.3em] text-emerald-300">Share</div>
@@ -137,26 +218,63 @@ export default function QuizResults({ results, onPlayAgain }: QuizResultsProps) 
           <span className="text-xl" aria-hidden>🔗</span>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleShare}
-            disabled={shareStatus === "sharing" || !shareUrl}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {shareStatus === "sharing" ? "Sharing..." : "Share quiz"}
-            <span aria-hidden>→</span>
-          </button>
-          <button
-            onClick={copyLink}
-            disabled={!shareUrl}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/60 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-400/10 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Copy link
-          </button>
-        </div>
+        <div className="grid gap-4 lg:grid-cols-[1fr,auto] lg:items-center">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleShare}
+                disabled={shareStatus === "sharing" || !shareUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {shareStatus === "sharing" ? "Sharing..." : "Share quiz"}
+                <span aria-hidden>→</span>
+              </button>
+              <button
+                onClick={copyLink}
+                disabled={!shareUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/60 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-400/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Copy link
+              </button>
+            </div>
 
-        <div className="text-xs font-mono text-emerald-200/80 break-all">
-          {shareUrl || "Preparing share link..."}
+            <div className="text-xs font-mono text-emerald-200/80 break-all">
+              {shareUrl || "Preparing share link..."}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-emerald-500/30 bg-slate-950/30 p-4 shadow-inner shadow-emerald-500/10">
+            <div className="rounded-lg bg-white p-3 shadow-md">
+              <QRCodeCanvas
+                value={shareUrl || "https://curvaqz"}
+                size={160}
+                bgColor="#ffffff"
+                fgColor="#0f172a"
+                level="M"
+                includeMargin
+                ref={qrCanvasRef}
+              />
+            </div>
+            <div className="text-center text-xs text-emerald-100/80">
+              Scan the QR code to open this quiz
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button
+                onClick={downloadQrCode}
+                disabled={!shareUrl}
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/60 px-3 py-2 text-xs font-semibold text-emerald-200 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-400/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Save QR code
+              </button>
+              <button
+                onClick={shareQrCode}
+                disabled={!shareUrl}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Share QR code
+              </button>
+            </div>
+          </div>
         </div>
 
         {shareMessage && (
