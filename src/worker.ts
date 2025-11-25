@@ -12,12 +12,10 @@ import type { WorkerEnv } from "./types/worker";
 const api = new Hono<{ Bindings: WorkerEnv }>();
 
 api.get("/health", (c) =>
-  c.json(
-    {
-      status: "ok",
-      timestamp: Date.now()
-    }
-  )
+  c.json({
+    status: "ok",
+    timestamp: Date.now()
+  })
 );
 
 api.post("/session/bootstrap", handleSessionBootstrap);
