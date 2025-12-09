@@ -29,7 +29,8 @@ describe("quiz generation route", () => {
       AUTH_SECRET,
       DB: db as unknown as D1Database,
       JWT_ISSUER: "test-issuer",
-      QUIZ_MODE: "mock"
+      QUIZ_MODE: "mock",
+      QUIZ_LENGTH: "10"
     } as unknown as WorkerEnv;
     originalFetch = global.fetch;
   });
@@ -47,8 +48,8 @@ describe("quiz generation route", () => {
     expect(body.sessionId).toBeTruthy();
     expect(body.quizId).toBeTruthy();
     expect(body.source).toBe("mock");
-    expect(body.questions.length).toBeGreaterThanOrEqual(5);
-    expect(body.questions.length).toBeLessThanOrEqual(10);
+    // Mock quiz data only has 5 questions, so we get 5 even though QUIZ_LENGTH is 10
+    expect(body.questions.length).toBe(5);
 
     const cookies = getCookies(res);
     expect(cookies.some((cookie) => cookie.startsWith("cq_session="))).toBe(true);
@@ -172,6 +173,7 @@ describe("quiz generation route", () => {
     env.QUIZ_MODE = "live";
     env.QUIZ_API_AUTH = "test-auth";
     env.QUIZ_API_BASE = "https://clashui.inia.fr/api/quiz/";
+    env.QUIZ_LENGTH = "10";
 
     // Mock getLeagues success, then quiz failure
     global.fetch = vi.fn()

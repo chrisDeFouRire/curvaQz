@@ -110,7 +110,8 @@ describe("leaderboard routes", () => {
       AUTH_SECRET: "test-secret",
       DB: db as unknown as D1Database,
       JWT_ISSUER: "test-issuer",
-      QUIZ_MODE: "mock"
+      QUIZ_MODE: "mock",
+      QUIZ_LENGTH: "10"
     } as unknown as WorkerEnv;
   });
 

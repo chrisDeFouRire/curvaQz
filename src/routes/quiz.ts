@@ -57,16 +57,16 @@ type StoredQuizPayload = {
   questions: NormalizedQuestion[];
 };
 
-const DEFAULT_QUESTION_COUNT = 5;
-const MIN_QUESTION_COUNT = 5;
-const MAX_QUESTION_COUNT = 10;
-
-function clampQuestionCount(value?: string | number): number {
-  const parsed = typeof value === "number" ? value : Number(value);
-  if (!Number.isFinite(parsed)) {
-    return DEFAULT_QUESTION_COUNT;
+function parseQuizLength(env: WorkerEnv): number {
+  const value = env.QUIZ_LENGTH;
+  if (value === undefined) {
+    throw new Error("QUIZ_LENGTH environment variable is required");
   }
-  return Math.min(MAX_QUESTION_COUNT, Math.max(MIN_QUESTION_COUNT, Math.floor(parsed)));
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`QUIZ_LENGTH must be a positive number, got: ${value}`);
+  }
+  return Math.floor(parsed);
 }
 
 function shuffle<T>(items: T[], randomFn: () => number = Math.random): T[] {
@@ -143,7 +143,7 @@ function normalizeQuiz(
     .map((question) => normalizeQuestion(question))
     .filter((value): value is NormalizedQuestion => Boolean(value));
 
-  const limited = normalizedQuestions.slice(0, clampQuestionCount(targetLength));
+  const limited = normalizedQuestions.slice(0, targetLength);
   if (limited.length === 0) {
     throw new Error("Quiz data did not contain any questions");
   }
@@ -222,7 +222,7 @@ function resolveQuizMode(env: WorkerEnv): QuizMode {
 }
 
 function loadMockQuiz(targetLength: number): RawQuiz {
-  const questions = shuffle(mockQuiz as RawQuestion[]).slice(0, clampQuestionCount(targetLength));
+  const questions = shuffle(mockQuiz as RawQuestion[]).slice(0, targetLength);
   return { questions };
 }
 
@@ -246,7 +246,7 @@ async function loadLiveQuiz(env: WorkerEnv, targetLength: number): Promise<RawQu
       const response = await getQuizByLatestFixture<LiveQuizResponse>(
         {
           leagueId,
-          length: clampQuestionCount(targetLength),
+          length: targetLength,
           nbAnswers: 4,
           distinct: true,
           shuffle: true,
@@ -293,7 +293,7 @@ export const handleGenerateQuiz: Handler<{ Bindings: WorkerEnv }> = async (c) =>
     return sessionResult.response;
   }
 
-  const targetLength = clampQuestionCount((c.env as unknown as Record<string, unknown>).QUIZ_LENGTH as string | number | undefined);
+  const targetLength = parseQuizLength(c.env);
   const mode = resolveQuizMode(c.env);
 
   try {

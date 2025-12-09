@@ -24,7 +24,8 @@
     "QUIZ_MODE": "live",
     "QUIZ_API_BASE": "https://clashui.inia.fr/api/quiz/",
     "QUIZ_API_AUTH": "ZXh0ZGV2MUA1NTc3bWVkaWEuY29tOmFROE42emY0eDVxUDdY",
-    "QZ_API_CACHE_TTL_SECONDS": "3600"
+    "QZ_API_CACHE_TTL_SECONDS": "3600",
+    "QUIZ_LENGTH": "10"
   },
   "observability": {
     "enabled": false,
